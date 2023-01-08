@@ -7,7 +7,7 @@ using namespace std;
 
 struct Pile {
     int top;
-    static const int taillePile = 100;
+    static const long taillePile = 100;
     array<double, taillePile> data;
 };
 
