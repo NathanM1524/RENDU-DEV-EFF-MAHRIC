@@ -1,30 +1,33 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-using namespace std;
-const int STACK_SIZE = 100;
+#include <array>
 
-struct Stack {
-    double data[STACK_SIZE];
+using namespace std;
+
+struct Pile {
     int top;
+    static const int taillePile = 100;
+    array<double, taillePile> data;
 };
 
-void push(Stack& stack, double value) {
-    if (stack.top < STACK_SIZE - 1) {
-        stack.data[++stack.top] = value;
+void push(Pile& pile, double value) {
+    if (pile.top < pile.taillePile - 1) {
+        pile.top++;
+        pile.data[pile.top] = value;
     }
 }
 
-double pop(Stack& stack) {
-    if (stack.top >= 0) {
-        return stack.data[stack.top--];
+double pop(Pile& pile) {
+    if (pile.top >= 0) {
+        return pile.data[pile.top--];
     }
     return 0;
 }
 
-double peek(Stack& stack) {
-    if (stack.top >= 0) {
-        return stack.data[stack.top];
+double peek(const Pile& pile) {
+    if (pile.top >= 0) {
+        return pile.data[pile.top];
     }
     return 0;
 }
@@ -33,59 +36,84 @@ bool isOperator(char c) {
     return c == '+' || c == '-' || c == '*' || c == '/';
 }
 
-double calcul(char operation, double operand1, double operand2) {
+double calcul(char operation, double operande1, double operande2) {
     switch (operation) {
     case '+':
-        return operand1 + operand2;
+        return operande1 + operande2;
     case '-':
-        return operand1 - operand2;
+        return operande1 - operande2;
     case '*':
-        return operand1 * operand2;
+        return operande1 * operande2;
     case '/':
-        return operand1 / operand2;
+        return operande1 / operande2;
     default:
         return 0;
     }
 }
 
-int main() {
-    string input;
+stringstream initialise()
+{
+    string entree;
     cout << "Entrez un calcul sous forme de notation polonaise : ";
-    getline(std::cin, input);
-
-    stringstream inputStream(input);
-    string token;
-    Stack stack;
-    stack.top = -1;
-
-    while (inputStream >> token) {
-        if (isOperator(token[0])) {
-            double operand2 = pop(stack);
-            double operand1 = pop(stack);
-            double result = calcul(token[0], operand1, operand2);
-            push(stack, result);
-            cout << operand1 << " " << token[0] << " " << operand2 << " = " << result << std::endl;
-        }
-        else {
-            double value;
-            try {
-                value = std::stod(token);
-            }
-            catch (const std::invalid_argument& e) {
-                cout << "Entrée invalide " << token << std::endl;
-                return 1;
-            }
-            push(stack, value);
-        }
-    }
-
-    if (stack.top == 0) {
-        cout << "Resultat : " << peek(stack) << std::endl;
-    }
-    else {
-        cout <<
-            "Calcul impossible." << std::endl;
-    }
-    return 0;
+    getline(std::cin, entree);
+    stringstream entreeUtilisateur(entree);
+    return entreeUtilisateur;
 }
 
+void affichage(Pile pile)
+{
+    if (pile.top == 0) {
+        cout << "Resultat : " << peek(pile) << endl;
+    }
+    else {
+        if (pile.top > 0) {
+            cout << "Error: trop d'operandes" << endl;
+        }
+        else {
+            cout << "Erreur: pas asser d'operandes" << endl;
+        }
+    }
+}
+
+Pile ifIsOperateur(Pile pile,string valeure)
+{
+    if (pile.top < 1) {
+        cout << "Erreur: pas asser d'operandes pour l'operateur : " << valeure[0] << endl;
+        exit(1);
+    }
+    double operande2 = pop(pile);
+    double operande1 = pop(pile);
+    double resultat = calcul(valeure[0], operande1, operande2);
+    push(pile, resultat);
+    cout << operande1 << " " << valeure[0] << " " << operande2 << " = " << resultat << endl;
+    return pile;
+}
+
+Pile ifIsOperande(Pile pile, string valeure) {
+    double operande;
+    try {
+        operande = stod(valeure);
+    }
+    catch (const invalid_argument& e) {
+        cout << "Entree invalide " << valeure << endl;
+        exit(1);
+    }
+    push(pile, operande);
+    return pile;
+}
+
+int main() {
+    string valeure;
+    Pile pile;
+    pile.top = -1;
+    stringstream entreeUtilisateur = initialise();
+    while (entreeUtilisateur >> valeure) {
+        if (isOperator(valeure[0])) {
+            pile = ifIsOperateur(pile, valeure);
+        }
+        else {
+            pile = ifIsOperande(pile, valeure);
+        }
+    }
+    affichage(pile);
+}
